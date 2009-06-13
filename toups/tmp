@@ -1,0 +1,56 @@
+(ns twodarray (:use toups.list toups.misc toups.structstar))
+(clojure/in-ns 'twodarray)
+
+(defstruct* twodarray :shape :data)
+
+(defn init-array [n & [val]]
+  (let [val (if val val 0)]
+	(loop [array [] i 0]
+	  (if (< i n) (recur (conj array val) (+ i 1)) array))))
+
+(defn zeros [shape]
+  (make-twodarray 
+   :shape shape
+   :data (init-array (foldl * 1 shape))))
+
+(defn index [array i j]
+  (+ i (* (first (:shape array)) j)))
+
+(defn print-twodarray [array]
+  (loop [i 0]
+	(if (< i (first (:shape array)))
+	  (do 
+		(loop [j 0]
+		  (if (< j (frest (:shape array)))
+			(do
+			  (printf "%d " (get (:data array) (index array i j)))
+			  (recur (+ j 1)))
+			()))
+		(do 
+		  (newline)
+		  (recur (+ i 1))))
+	  ())))
+
+(defn set2d [array i j val]
+  (assoc array :data (assoc (:data array) (index array i j) val)))
+
+(defn get2d [array i j val]
+  (get (:data array) (index array i j)))
+
+(defn slice2d [array is js]
+  (make-twodarray :shape [(count is) (count js)]
+				  :data (foldl 
+						 (fn [it ac] (conj ac it))
+						 []
+						 (map (fn [ix] (apply get2d (cons array ix))) (square-zip is js)))))
+
+(defn map2d [array thunk]
+  (assoc array :data
+  (foldl (fn [it ac] (assoc ac (apply index (cons array it)) (thunk (get ac (apply index (cons array it))))))
+		 (:data array)
+		 (uniq (square-zip (range 0 (first (:shape array)))
+					 (range 0 (frest (:shape array))))))))
+
+
+
+	  
